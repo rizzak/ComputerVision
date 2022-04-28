@@ -5,6 +5,8 @@ import mediapipe as mp
 import numpy as np
 import base64
 from utils.helpers import current_milli_time
+from datetime import datetime
+
 
 async def detect(request):
     data = await request.post()
@@ -14,6 +16,7 @@ async def detect(request):
         response_obj = {'error': str(e)}
         return web.Response(text=json.dumps(response_obj), status=400)
 
+    current_time = datetime.now().strftime('%d/%m/%Y %H:%M:%S.%f')
     start = current_milli_time()
     mp_drawing = mp.solutions.drawing_utils
     try:
@@ -42,7 +45,7 @@ async def detect(request):
     end = current_milli_time()
     totalTime = end - start
 
-    print(f"Time: {totalTime} Face: {text}")
+    print(f"{current_time} Time: {totalTime} Face: {text}")
 
     cv2.putText(image, f'Detect time: {int(totalTime)}', (20,70), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,255,0), 2)
 
