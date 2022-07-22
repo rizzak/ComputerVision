@@ -1,0 +1,12 @@
+services:
+  bee_cam_face:
+    build:
+      context: .
+    container_name: bee_cam_detector
+    hostname: bee_cam_detector
+    volumes:
+      - ./:/app
+    ports:
+      - 8080:8080
+    restart: unless-stopped
+
