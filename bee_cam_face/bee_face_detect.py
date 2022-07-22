@@ -9,11 +9,13 @@ from datetime import datetime
 
 
 async def detect(request):
+    print('working...')
     data = await request.post()
     try:
         content = data['my_img'].file.read()
     except KeyError as e:
         response_obj = {'error': str(e)}
+        print(f'error {str(e)}')
         return web.Response(text=json.dumps(response_obj), status=400)
 
     current_time = datetime.now().strftime('%d/%m/%Y %H:%M:%S.%f')
@@ -23,7 +25,7 @@ async def detect(request):
         im_arr = np.frombuffer(content, dtype=np.uint8)  # im_arr is one-dim Numpy array
         image = cv2.imdecode(im_arr, flags=cv2.IMREAD_COLOR)
         with mp.solutions.face_detection.FaceDetection(
-            model_selection=0, min_detection_confidence=0.4) as face_detection:
+                model_selection=0, min_detection_confidence=0.7) as face_detection:
             # To improve performance, optionally mark the image as not writeable to
             # pass by reference.
             image.flags.writeable = False
@@ -40,6 +42,7 @@ async def detect(request):
                 text = 'no'
     except Exception as e:
         response_obj = {'error': str(e)}
+        print(f'error {str(e)}')
         return web.Response(text=json.dumps(response_obj), status=400)
 
     end = current_milli_time()
@@ -52,13 +55,14 @@ async def detect(request):
     base64_str = cv2.imencode('.jpg',image)[1].tobytes()
     base64_str = base64.b64encode(base64_str).decode('utf8')
     response_obj = {'face': text, 'image': base64_str}
+    print('done')
     return web.json_response(response_obj)
 
 async def handle(request):
     response_obj = {'status': 'success'}
     return web.Response(text=json.dumps(response_obj), status=200)
 
-app = web.Application()
+app = web.Application(client_max_size=1024**2*4)
 app.router.add_get('/', handle)
 app.router.add_post('/detect', detect)
 web.run_app(app)
